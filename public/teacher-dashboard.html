@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - EduTrack</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-logo">EduTrack - Teacher</h1>
+            <div class="nav-links">
+                <span id="userName" class="nav-user"></span>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <h2>Teacher Dashboard</h2>
+                <div class="header-actions">
+                    <button id="addStudentBtn" class="btn btn-primary">Add Student</button>
+                    <button id="createTestBtn" class="btn btn-primary">Create Test</button>
+                </div>
+            </div>
+
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="totalStudents">0</span>
+                    <span class="stat-label">Total Students</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalTests">0</span>
+                    <span class="stat-label">Total Tests</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalSubmissions">0</span>
+                    <span class="stat-label">Submissions</span>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="students">Students</button>
+                <button class="tab-btn" data-tab="tests">Tests</button>
+                <button class="tab-btn" data-tab="submissions">Submissions</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Students Tab -->
+                <div id="students-tab" class="tab-pane active">
+                    <div class="table-container">
+                        <table class="table" id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Grade</th>
+                                    <th>Joined Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <!-- Students will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tests Tab -->
+                <div id="tests-tab" class="tab-pane">
+                    <div class="table-container">
+                        <table class="table" id="testsTable">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Assigned To</th>
+                                    <th>Due Date</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="testsTableBody">
+                                <!-- Tests will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Submissions Tab -->
+                <div id="submissions-tab" class="tab-pane">
+                    <div class="table-container">
+                        <table class="table" id="submissionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Test</th>
+                                    <th>Submitted</th>
+                                    <th>Graded</th>
+                                    <th>Score</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="submissionsTableBody">
+                                <!-- Submissions will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <h3>Add New Student</h3>
+            <form id="addStudentForm" class="auth-form">
+                <div class="form-group">
+                    <label for="studentName">Full Name</label>
+                    <input type="text" id="studentName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentEmail">Email</label>
+                    <input type="email" id="studentEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentId">Student ID</label>
+                    <input type="text" id="studentId" name="studentId" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentGrade">Grade</label>
+                    <input type="text" id="studentGrade" name="grade">
+                </div>
+                <div class="form-group">
+                    <label for="studentPassword">Password</label>
+                    <input type="text" id="studentPassword" name="password" value="student123" required>
+                    <small>Give this password to the student</small>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Create Student</button>
+            </form>
+            <div id="studentModalMessage" class="message"></div>
+        </div>
+    </div>
+
+    <!-- Create Test Modal -->
+    <div id="createTestModal" class="modal">
+        <div class="modal-content wide-modal">
+            <button class="close-modal">&times;</button>
+            <h3>Create New Test</h3>
+            <form id="createTestForm" class="auth-form">
+                <div class="form-group">
+                    <label for="testTitle">Test Title</label>
+                    <input type="text" id="testTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="testDescription">Description</label>
+                    <textarea id="testDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="testDueDate">Due Date</label>
+                    <input type="datetime-local" id="testDueDate" name="dueDate">
+                </div>
+                <div class="form-group">
+                    <label>Assign to Students (select multiple)</label>
+                    <div id="studentsCheckboxList">
+                        <!-- Students checkboxes will be loaded here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Questions</label>
+                    <div id="questionsContainer">
+                        <div class="question-item">
+                            <input type="text" placeholder="Question 1" class="question-input" required>
+                        </div>
+                    </div>
+                    <button type="button" id="addQuestionBtn" class="btn btn-secondary">Add Question</button>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Create Test</button>
+            </form>
+            <div id="testModalMessage" class="message"></div>
+        </div>
+    </div>
+
+    <script>
+        class TeacherDashboard {
+            constructor() {
+                this.token = localStorage.getItem('token');
+                this.user = JSON.parse(localStorage.getItem('user') || '{}');
+                this.students = [];
+                this.init();
+            }
+
+            init() {
+                if (!this.token || this.user.role !== 'teacher') {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                document.getElementById('userName').textContent = this.user.name;
+                this.loadStats();
+                this.loadStudents();
+                this.setupEventListeners();
+                this.setupTabs();
+            }
+
+            setupEventListeners() {
+                document.getElementById('logoutBtn').addEventListener('click', this.logout.bind(this));
+                document.getElementById('addStudentBtn').addEventListener('click', this.showAddStudentModal.bind(this));
+                document.getElementById('createTestBtn').addEventListener('click', this.showCreateTestModal.bind(this));
+                
+                // Close modals
+                document.querySelectorAll('.close-modal').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.target.closest('.modal').style.display = 'none';
+                    });
+                });
+
+                // Add question button
+                document.getElementById('addQuestionBtn').addEventListener('click', this.addQuestion.bind(this));
+
+                // Forms
+                document.getElementById('addStudentForm').addEventListener('submit', this.addStudent.bind(this));
+                document.getElementById('createTestForm').addEventListener('submit', this.createTest.bind(this));
+
+                // Close modals when clicking outside
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            setupTabs() {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        // Update active tab button
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+
+                        // Show corresponding tab content
+                        const tabName = e.target.dataset.tab;
+                        document.querySelectorAll('.tab-pane').forEach(pane => {
+                            pane.classList.remove('active');
+                        });
+                        document.getElementById(`${tabName}-tab`).classList.add('active');
+
+                        // Load data for the tab
+                        switch(tabName) {
+                            case 'tests':
+                                this.loadTests();
+                                break;
+                            case 'submissions':
+                                this.loadSubmissions();
+                                break;
+                        }
+                    });
+                });
+            }
+
+            async loadStats() {
+                try {
+                    const response = await fetch('/api/teacher/dashboard-stats', {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const stats = await response.json();
+                        document.getElementById('totalStudents').textContent = stats.totalStudents;
+                        document.getElementById('totalTests').textContent = stats.totalTests;
+                        document.getElementById('totalSubmissions').textContent = stats.totalSubmissions;
+                    }
+                } catch (error) {
+                    console.error('Error loading stats:', error);
+                }
+            }
+
+            async loadStudents() {
+                try {
+                    const response = await fetch('/api/teacher/students', {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const students = await response.json();
+                        this.students = students;
+                        this.renderStudents(students);
+                    } else if (response.status === 401) {
+                        this.logout();
+                    }
+                } catch (error) {
+                    console.error('Error loading students:', error);
+                }
+            }
+
+            renderStudents(students) {
+                const tbody = document.getElementById('studentsTableBody');
+                tbody.innerHTML = '';
+
+                students.forEach(student => {
+                    const row = document.createElement('tr');
+                    const joinDate = new Date(student.createdAt).toLocaleDateString();
+                    
+                    row.innerHTML = `
+                        <td>${student.studentId}</td>
+                        <td>${student.userId.name}</td>
+                        <td>${student.userId.email}</td>
+                        <td>${student.grade || '-'}</td>
+                        <td>${joinDate}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            async loadTests() {
+                try {
+                    const response = await fetch('/api/teacher/tests', {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const tests = await response.json();
+                        this.renderTests(tests);
+                    }
+                } catch (error) {
+                    console.error('Error loading tests:', error);
+                }
+            }
+
+            renderTests(tests) {
+                const tbody = document.getElementById('testsTableBody');
+                tbody.innerHTML = '';
+
+                tests.forEach(test => {
+                    const row = document.createElement('tr');
+                    const dueDate = test.dueDate ? new Date(test.dueDate).toLocaleDateString() : '-';
+                    const createdDate = new Date(test.createdAt).toLocaleDateString();
+                    const assignedCount = test.assignedTo.length;
+                    
+                    row.innerHTML = `
+                        <td>${test.title}</td>
+                        <td>${test.description || '-'}</td>
+                        <td>${assignedCount} students</td>
+                        <td>${dueDate}</td>
+                        <td>${createdDate}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            async loadSubmissions() {
+                try {
+                    // For now, load submissions for the first test or implement a selection mechanism
+                    const response = await fetch('/api/teacher/tests', {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const tests = await response.json();
+                        if (tests.length > 0) {
+                            this.loadTestSubmissions(tests[0]._id);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading submissions:', error);
+                }
+            }
+
+            async loadTestSubmissions(testId) {
+                try {
+                    const response = await fetch(`/api/teacher/tests/${testId}/submissions`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const submissions = await response.json();
+                        this.renderSubmissions(submissions);
+                    }
+                } catch (error) {
+                    console.error('Error loading test submissions:', error);
+                }
+            }
+
+            renderSubmissions(submissions) {
+                const tbody = document.getElementById('submissionsTableBody');
+                tbody.innerHTML = '';
+
+                submissions.forEach(submission => {
+                    const row = document.createElement('tr');
+                    const submittedDate = new Date(submission.submittedAt).toLocaleDateString();
+                    
+                    row.innerHTML = `
+                        <td>${submission.studentId.name}</td>
+                        <td>${submission.testId.title}</td>
+                        <td>${submittedDate}</td>
+                        <td>${submission.graded ? 'Yes' : 'No'}</td>
+                        <td>${submission.score || '-'}</td>
+                        <td>
+                            ${!submission.graded ? 
+                                `<button class="btn btn-primary btn-sm" onclick="teacherDashboard.gradeSubmission('${submission._id}')">
+                                    Grade
+                                </button>` :
+                                '<span class="text-muted">Graded</span>'
+                            }
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            showAddStudentModal() {
+                document.getElementById('addStudentModal').style.display = 'block';
+                document.getElementById('studentModalMessage').textContent = '';
+                document.getElementById('addStudentForm').reset();
+            }
+
+            showCreateTestModal() {
+                document.getElementById('createTestModal').style.display = 'block';
+                document.getElementById('testModalMessage').textContent = '';
+                document.getElementById('createTestForm').reset();
+                this.loadStudentsForTest();
+            }
+
+            async loadStudentsForTest() {
+                const container = document.getElementById('studentsCheckboxList');
+                container.innerHTML = '';
+
+                this.students.forEach(student => {
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-item';
+                    div.innerHTML = `
+                        <input type="checkbox" id="student-${student.userId._id}" value="${student.userId._id}">
+                        <label for="student-${student.userId._id}">${student.userId.name} (${student.studentId})</label>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            addQuestion() {
+                const container = document.getElementById('questionsContainer');
+                const questionCount = container.children.length + 1;
+                const div = document.createElement('div');
+                div.className = 'question-item';
+                div.innerHTML = `
+                    <input type="text" placeholder="Question ${questionCount}" class="question-input" required>
+                    <button type="button" class="btn btn-danger btn-sm remove-question">Remove</button>
+                `;
+                container.appendChild(div);
+
+                // Add remove event listener
+                div.querySelector('.remove-question').addEventListener('click', function() {
+                    div.remove();
+                });
+            }
+
+            async addStudent(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(e.target);
+                const studentData = {
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    studentId: formData.get('studentId'),
+                    grade: formData.get('grade'),
+                    password: formData.get('password')
+                };
+
+                const submitBtn = e.target.querySelector('button');
+                const messageDiv = document.getElementById('studentModalMessage');
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating...';
+
+                try {
+                    const response = await fetch('/api/auth/register-student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.token}`
+                        },
+                        body: JSON.stringify(studentData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        messageDiv.innerHTML = `
+                            Student created successfully!<br>
+                            <strong>Login details for student:</strong><br>
+                            Username: ${data.student.email}<br>
+                            Password: ${data.student.password}
+                        `;
+                        messageDiv.className = 'message success';
+                        this.loadStudents();
+                        this.loadStats();
+                    } else {
+                        messageDiv.textContent = data.message || 'Failed to create student';
+                        messageDiv.className = 'message error';
+                    }
+                } catch (error) {
+                    messageDiv.textContent = 'Failed to create student. Please try again.';
+                    messageDiv.className = 'message error';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Create Student';
+                }
+            }
+
+            async createTest(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(e.target);
+                const questions = Array.from(document.querySelectorAll('.question-input'))
+                    .map(input => input.value)
+                    .filter(q => q.trim() !== '');
+
+                const assignedTo = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(checkbox => checkbox.value);
+
+                const testData = {
+                    title: formData.get('title'),
+                    description: formData.get('description'),
+                    dueDate: formData.get('dueDate'),
+                    questions: questions.map(q => ({ question: q, type: 'text' })),
+                    assignedTo
+                };
+
+                const submitBtn = e.target.querySelector('button');
+                const messageDiv = document.getElementById('testModalMessage');
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating...';
+
+                try {
+                    const response = await fetch('/api/teacher/tests', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.token}`
+                        },
+                        body: JSON.stringify(testData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        messageDiv.textContent = 'Test created successfully!';
+                        messageDiv.className = 'message success';
+                        document.getElementById('createTestModal').style.display = 'none';
+                        this.loadTests();
+                        this.loadStats();
+                    } else {
+                        messageDiv.textContent = data.message || 'Failed to create test';
+                        messageDiv.className = 'message error';
+                    }
+                } catch (error) {
+                    messageDiv.textContent = 'Failed to create test. Please try again.';
+                    messageDiv.className = 'message error';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Create Test';
+                }
+            }
+
+            async gradeSubmission(submissionId) {
+                const score = prompt('Enter score for this submission:');
+                if (score === null) return;
+
+                const feedback = prompt('Enter feedback (optional):');
+
+                try {
+                    const response = await fetch(`/api/teacher/submissions/${submissionId}/grade`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.token}`
+                        },
+                        body: JSON.stringify({ score: parseInt(score), feedback })
+                    });
+
+                    if (response.ok) {
+                        this.loadSubmissions();
+                    } else {
+                        alert('Failed to grade submission');
+                    }
+                } catch (error) {
+                    console.error('Error grading submission:', error);
+                    alert('Failed to grade submission');
+                }
+            }
+
+            logout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Initialize dashboard when page loads
+        const teacherDashboard = new TeacherDashboard();
+    </script>
+</body>
+</html>
