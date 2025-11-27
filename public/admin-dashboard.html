@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - EduTrack</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-logo">EduTrack - Admin</h1>
+            <div class="nav-links">
+                <span id="userName" class="nav-user"></span>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <h2>Super Admin Dashboard</h2>
+                <button id="addTeacherBtn" class="btn btn-primary">Add Teacher</button>
+            </div>
+
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="totalTeachers">0</span>
+                    <span class="stat-label">Total Teachers</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalStudents">0</span>
+                    <span class="stat-label">Total Students</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalTests">0</span>
+                    <span class="stat-label">Total Tests</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Teacher Management</h3>
+                <div class="table-container">
+                    <table class="table" id="teachersTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teachersTableBody">
+                            <!-- Teachers will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Teacher Modal -->
+    <div id="addTeacherModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <h3>Add New Teacher</h3>
+            <form id="addTeacherForm" class="auth-form">
+                <div class="form-group">
+                    <label for="teacherName">Full Name</label>
+                    <input type="text" id="teacherName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="teacherEmail">Email</label>
+                    <input type="email" id="teacherEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="teacherPassword">Password</label>
+                    <input type="password" id="teacherPassword" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Create Teacher</button>
+            </form>
+            <div id="modalMessage" class="message"></div>
+        </div>
+    </div>
+
+    <script>
+        class AdminDashboard {
+            constructor() {
+                this.token = localStorage.getItem('token');
+                this.user = JSON.parse(localStorage.getItem('user') || '{}');
+                this.init();
+            }
+
+            init() {
+                if (!this.token || this.user.role !== 'superadmin') {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                document.getElementById('userName').textContent = this.user.name;
+                this.loadStats();
+                this.loadTeachers();
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('logoutBtn').addEventListener('click', this.logout.bind(this));
+                document.getElementById('addTeacherBtn').addEventListener('click', this.showAddTeacherModal.bind(this));
+                document.querySelector('.close-modal').addEventListener('click', this.hideAddTeacherModal.bind(this));
+                document.getElementById('addTeacherForm').addEventListener('submit', this.addTeacher.bind(this));
+                
+                // Close modal when clicking outside
+                document.getElementById('addTeacherModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'addTeacherModal') {
+                        this.hideAddTeacherModal();
+                    }
+                });
+            }
+
+            async loadStats() {
+                try {
+                    const response = await fetch('/api/admin/stats', {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const stats = await response.json();
+                        document.getElementById('totalTeachers').textContent = stats.totalTeachers;
+                        document.getElementById('totalStudents').textContent = stats.totalStudents;
+                        document.getElementById('totalTests').textContent = stats.totalTests;
+                    }
+                } catch (error) {
+                    console.error('Error loading stats:', error);
+                }
+            }
+
+            async loadTeachers() {
+                try {
+                    const response = await fetch('/api/admin/teachers', {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const teachers = await response.json();
+                        this.renderTeachers(teachers);
+                    } else if (response.status === 401) {
+                        this.logout();
+                    }
+                } catch (error) {
+                    console.error('Error loading teachers:', error);
+                }
+            }
+
+            renderTeachers(teachers) {
+                const tbody = document.getElementById('teachersTableBody');
+                tbody.innerHTML = '';
+
+                teachers.forEach(teacher => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${teacher.name}</td>
+                        <td>${teacher.email}</td>
+                        <td>
+                            <span class="status ${teacher.isActive ? 'active' : 'inactive'}">
+                                ${teacher.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td>
+                            ${teacher.isActive ? 
+                                `<button class="btn btn-danger btn-sm" onclick="adminDashboard.deactivateTeacher('${teacher._id}')">
+                                    Deactivate
+                                </button>` :
+                                '<span class="text-muted">Deactivated</span>'
+                            }
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            showAddTeacherModal() {
+                document.getElementById('addTeacherModal').style.display = 'block';
+                document.getElementById('modalMessage').textContent = '';
+                document.getElementById('addTeacherForm').reset();
+            }
+
+            hideAddTeacherModal() {
+                document.getElementById('addTeacherModal').style.display = 'none';
+            }
+
+            async addTeacher(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(e.target);
+                const teacherData = {
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    password: formData.get('password')
+                };
+
+                const submitBtn = e.target.querySelector('button');
+                const messageDiv = document.getElementById('modalMessage');
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating...';
+
+                try {
+                    const response = await fetch('/api/admin/teachers', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.token}`
+                        },
+                        body: JSON.stringify(teacherData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        messageDiv.textContent = 'Teacher created successfully!';
+                        messageDiv.className = 'message success';
+                        this.hideAddTeacherModal();
+                        this.loadTeachers();
+                        this.loadStats();
+                    } else {
+                        messageDiv.textContent = data.message || 'Failed to create teacher';
+                        messageDiv.className = 'message error';
+                    }
+                } catch (error) {
+                    messageDiv.textContent = 'Failed to create teacher. Please try again.';
+                    messageDiv.className = 'message error';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Create Teacher';
+                }
+            }
+
+            async deactivateTeacher(teacherId) {
+                if (!confirm('Are you sure you want to deactivate this teacher?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/admin/teachers/${teacherId}/deactivate`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        this.loadTeachers();
+                        this.loadStats();
+                    } else {
+                        alert('Failed to deactivate teacher');
+                    }
+                } catch (error) {
+                    console.error('Error deactivating teacher:', error);
+                    alert('Failed to deactivate teacher');
+                }
+            }
+
+            logout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Initialize dashboard when page loads
+        const adminDashboard = new AdminDashboard();
+    </script>
+</body>
+</html>
